@@ -10,7 +10,7 @@ struct list{
 
 template <int n>
 struct Int{
-  static const int result = n;
+  static const int val = n;
 };
 
 template <typename list>
@@ -31,15 +31,53 @@ struct Nth {
 
 template <typename list>
 struct Nth<list,1>{
-  static const int result = list::head::result;
+  static const int result = list::head::val;
 };
 
 
+template <typename list, int n>
+struct checkIfExists{
+  static const bool result = (list::head::val == n) or (checkIfExists<typename list::tail, n>::result);
+};
 
+template <int n>
+struct checkIfExists <NIL,n>{
+  static const bool result = false;
+};
+
+template <typename list_, int n>
+struct prepend{
+  typedef list< Int<n> , list_> result;
+};
+
+
+template <typename list_, int n>
+struct append{
+  typedef list<typename list_::head, typename append<typename list_::tail, n>::result> result;
+};
+
+template <int n>
+struct append<NIL, n>{
+  typedef list< Int<n>, NIL> result;
+};
+
+
+using list123 = list< Int<1>, list< Int<2>, list<Int<3> > > >;
+using list0123 = prepend<list123, 0>::result;
+using list1234 = append<list123,4>::result;
+
+static_assert(length<list123>::result == 3, "Length does not match");
+static_assert(Nth<list123,1>::result == 1, "nth entry not matching");
+static_assert(Nth<list123,2>::result == 2, "nth entry not matching");
+static_assert(checkIfExists<list123,4>::result == false,"Error");
+static_assert(checkIfExists<list123,3>::result == true,"Error");
+
+static_assert(checkIfExists<list123,0>::result == false,"Error");
+static_assert(checkIfExists<list0123,0>::result == true,"Error");
+
+static_assert(checkIfExists<list1234,4>::result == true,"Error");
+static_assert(checkIfExists<list1234,5>::result == false,"Error");
 
 int main(){
-  using list123 = list< Int<1>, list< Int<2>, list<Int<3> > > >;
-  std::cout << length<list123>::result << std::endl;
-  std::cout << Nth<list123,1>::result << " " << Nth<list123,2>::result << " " << Nth<list123,3>::result << std::endl;
   return 0;
 }
